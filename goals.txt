@@ -1,0 +1,3 @@
+ejemplo2.csv 1300 DESC 1 1 1
+ejemplo2.csv 3 ASC 0 1 0
+ejemplo2.csv 666 ASC 1 0 1
