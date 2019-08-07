@@ -54,28 +54,37 @@ def makeColumnIndex(combination):
 def runGoal(goal):
     data_file = open("data/" + goal[0], "r")
     next(data_file)
-    result = ''
-    column_combination = makeColumnIndex(goal)
+    goal_combination = ''
+    for i in range(3, len(goal)):
+        goal_combination += str(goal[i])
+    column_combination = makeColumnIndex(goal_combination)
     ascending = True
     if goal[2] == 'DESC':
         ascending = False
     index_array = getIndexArray(data_file, column_combination, ascending)
     data_file.close()
-    data_file = open("data/" + goal[0], "r")
-    next(data_file)
-    i = 0
-    for data_line in data_file:
-        line = data_line.strip().split(';')
-        if goal[2] == 'ASC':
-            if i == int(index_array[int(goal[1])-1]):
-                result = line[0]
-        elif goal[2] == 'DESC':
-            if i == int(index_array[int(goal[1])-1]):
-                result = line[0]
-        i += 1
+    result = sortedIndexToId(goal[0], index_array, int(goal[1]))
     print(result)
     return result
 
+def sortedIndexToId(filename, index_array, target):
+    data_file = open("data/" + filename, "r")
+    next(data_file)
+    i = 0
+    result = ''
+    for data_line in data_file:
+        line = data_line.strip().split(';')
+        if target >= 0:
+            if i == int(index_array[target - 1]):
+                result = line[0]
+                break
+        else:
+            if i == int(index_array[target]):
+                result = line[0]
+                break
+        i += 1
+    data_file.close()
+    return result
 
 def getAllCombinations(filename):
     file = open("data/" + filename, 'r')
@@ -101,7 +110,8 @@ def preProcess (filename_list):
             file_arrays.append(index_array_ASC)
             # file_arrays.append(index_array_DESC)
             open_file.close()
-        preprocess_matrix[filename] = file_arrays  # pm['filename'][numbin*2+1][seek]
+        preprocess_matrix[filename] = file_arrays
+    return preprocess_matrix
 
 start = time.time()
 output = open("results3.txt", "w+")
@@ -109,8 +119,30 @@ output = open("results3.txt", "w+")
 if len(sys.argv) > 1:
     if (sys.argv[1] == '-p'):
         file_list = os.listdir('data')
-        preProcess(file_list)
-        pass
+        print("Preprocessing...")
+        preprocess_matrix = preProcess(file_list)
+        print("Preprocessing done.")
+        running = True
+        while running:
+            goal_input = input("Please insert goal (Q to quit): ")
+            start = time.time()
+            if goal_input == 'Q':
+                running = False
+            else:
+                goal = goal_input.strip().split()
+                goal_combination = ''
+                for i in range(3, len(goal)):
+                    goal_combination += str(goal[i])
+                if goal[2] == "ASC":
+                    result = sortedIndexToId(goal[0], preprocess_matrix[goal[0]][int(goal_combination, 2) - 1], int(goal[1]))
+                else:
+                    result = sortedIndexToId(goal[0], preprocess_matrix[goal[0]][int(goal_combination, 2) - 1], -int(goal[1]))
+                print(result)
+                output.write(result)
+                output.write("\n")
+                end = time.time()
+                print(end - start)
+
     else:
         print('Invalid Command')
 else:
